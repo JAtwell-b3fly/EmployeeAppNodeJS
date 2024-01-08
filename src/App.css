@@ -1,0 +1,137 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.backgroundStyling {
+  margin: 1rem;
+}
+
+.Dashboard {
+  display: flex;
+  flex-direction: row;
+  background-color:rgb(236, 243, 250);
+  width: 95%;
+  height: 47.3rem;
+  margin-top: 3rem;
+  margin-right: 3rem;
+  margin-left: 3rem;
+  position: relative;
+  margin-bottom: 3rem;
+  border-radius: 3rem;
+}
+
+.leftRibbon {
+  background-color: rgb(0, 169, 255);
+  height: 100%;
+  width: 15%;
+  border-top-left-radius: 3rem;
+  border-bottom-left-radius: 3rem;
+}
+
+.Content {
+  background-color:rgb(236, 243, 250);
+  margin-left: 1rem;
+  margin-right: 1rem;
+  width: 80%;
+  height: 100%;
+}
+
+.dashboardButton {
+  display: flex;
+  flex-direction: row;
+  background-color: rgb(236, 243, 250);
+  border: none;
+  border-bottom-left-radius: 1rem;
+  border-top-left-radius: 1rem;
+  width: 16rem;
+}
+
+.dashboardButtonUnselected {
+  display: flex;
+  flex-direction: row;
+  background-color: transparent;
+  border: solid;
+  border-bottom-left-radius: 1rem;
+  border-top-left-radius: 1rem;
+  width: 16rem;
+  border-color: rgb(236, 243, 250);
+}
+
+.singleLeftButton {
+  margin-top: 1rem;
+  margin-left: 1.5rem;
+}
+
+.List {
+  overflow-y: auto;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.EmpBox {
+  display: flex;
+  width: 16rem;
+  height: 14rem;
+  margin-top: 2rem;
+  border-radius: 1rem;
+  justify-content: center;
+  flex-direction: column;
+  background-color: white;
+  margin-right: 1rem;
+}
+
+.EmpBoxTop {
+  background-color: rgb(0, 169, 255);
+  height: 25%;
+  width: 100%;
+  border-top-right-radius: 1rem;
+  border-top-left-radius: 1rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.EmpBoxBottom {
+  background-color: white;
+  width: 100%;
+  height: 75%;
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+}
