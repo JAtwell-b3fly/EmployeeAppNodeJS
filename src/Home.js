@@ -19,7 +19,11 @@ import employed from "./images/briefcase.png";
 
 const Home = () => {
 
+    //Function to store the search term
     const [searchTerm, setSearchTerm] = useState("");
+
+    //Function to toggle between the Employee Form and the Employee List
+    const [dashboardToggle, setDashboardToggle] = useState("");
 
     return (
         <div className="backgroundStyling">
@@ -32,31 +36,34 @@ const Home = () => {
                     <hr style={{backgroundColor: "rgb(236, 243, 250)", height: "0.01rem"}} />
 
                     <div className="singleLeftButton" style={{marginTop: "2rem"}}>
-                        <button className="dashboardButton">
+                        <button className={dashboardToggle === "Form" ? "dashboardButton" : "dashboardButtonUnselected"} onClick={() => setDashboardToggle("Form")}>
                             <svg width="1.2rem" height="1.2rem" style={{marginTop: "0.7rem", justfifyContent: "center", marginRight: "1rem", marginLeft: "1rem"}} >
-                                <image href={employee_add} width="100%" height="100%" />
+                                <image href={dashboardToggle === "Form" ? employee_add : employee_add_unselected} width="100%" height="100%" />
                             </svg>
 
-                            <p style={{marginRight: "1rem", color: "rgb(0, 169, 255)", fontWeight: "bold", fontSize: "105%"}}>Add New Employee</p>
+                            <p style={{marginRight: "1rem", color: dashboardToggle === "Form" ? "rgb(0, 169, 255)" : "rgb(236, 243, 250)", fontWeight: "bold", fontSize: "105%"}}>Add New Employee</p>
                         </button>
                     </div>
 
                     <div className="singleLeftButton">
-                        <button className="dashboardButtonUnselected">
+                        <button className={dashboardToggle === "List" ? "dashboardButton" : "dashboardButtonUnselected"} onClick={() => setDashboardToggle("List")}>
                             <svg width="1.2rem" height="1.2rem" style={{marginTop: "0.6rem", justfifyContent: "center", marginRight: "1rem", marginLeft: "1rem", backgroundColor: "rgb(236, 243, 250)", borderRadius: "1rem", padding: "0.2rem"}} >
-                                <image href={employee_list_unselected} width="100%" height="100%" />
+                                <image href={dashboardToggle === "List" ? employee_list : employee_list_unselected} width="100%" height="100%" />
                             </svg>
 
-                            <p style={{marginRight: "1rem", color: "rgb(236, 243, 250)", fontWeight: "bold", fontSize: "105%"}}>Employees List</p>
+                            <p style={{marginRight: "1rem", color: dashboardToggle === "List" ? "rgb(0, 169, 255)" : "rgb(236, 243, 250)", fontWeight: "bold", fontSize: "105%"}}>Employees List</p>
                         </button>
                     </div>
                 </div>
 
                 <div className="Content">
+                    {dashboardToggle === "List" && (
+                        <>
                     <div style={{marginTop: "2rem"}}>
                         <input placeholder="Search..." 
                                 style={{borderRadius: "1rem", padding: "0.6rem", width: "35rem", border: "none", backgroundColor: "rgb(137, 207, 243, 0.3)", textAlign: "left"}}
                                 onChange={(event) => setSearchTerm(event.target.value)}
+                                value={searchTerm}
                         />
                     </div>
 
@@ -195,6 +202,16 @@ const Home = () => {
                             </div>
                         </div>
                     </div>
+                    </>
+                )}
+
+                { dashboardToggle === "Form" && (
+                    <>
+                        <div>
+
+                        </div>
+                    </>
+                )}
                 </div>
             </div>
         </div>
