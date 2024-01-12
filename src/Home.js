@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 
 import employee_add  from "./images/add-user.png";
 import employee_add_unselected from "./images/add-user-unselected.png";
@@ -23,8 +23,27 @@ import trash from "./images/trash.png";
 import save from "./images/save.png";
 import cancel from "./images/cancel.png";
 
-
 const Home = () => {
+
+    useEffect(() => {
+        fetch('http://localhost:8080/getEmployees')
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`HTTP error! Status: ${res.status}`);
+            }
+            return res.json();
+        })
+        .then(result => {
+            console.log("result: ", result);
+            setEmployees(result);
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+        });
+    }, [])
+
+    //Function to store the employees information
+    const [employees, setEmployees] = useState([]);
 
     //Function to store the search term
     const [searchTerm, setSearchTerm] = useState("");
@@ -75,6 +94,46 @@ const Home = () => {
     const [image, setImage] = useState(null);
     const [editImage, setEditImage] = useState(null);
 
+    const addNewEmployee = () => {
+
+        //Use the endpoint defined in the backend side to add the new employee
+
+        let userData = {
+            name: name,
+            emailA: emailA,
+            position: position,
+            locationE: locationE,
+            number: number,
+            workingStarted: workingStart,
+            employable: employable,
+            salary: salary,
+            cv: cv,
+            image: image,
+        };
+
+
+        fetch('http://localhost:8080/addEmployee', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json', 
+            },
+            body: JSON.stringify(userData), 
+        })
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`HTTP error! Status: ${res.status}`);
+            }
+            return res.json();
+        })
+        .then(result => {
+            console.log("result: ", result);
+            setEmployees(result);
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+        });
+    }
+
 
     const handleImageChange = (event) => {
         const file = event.target.files[0];
@@ -88,16 +147,41 @@ const Home = () => {
         }
     }
 
-    const saveEmployeeListInfo = () => {
-        setName(editName ? editName : name);
-        setEmailA(editEmailA ? editEmailA : emailA);
-        setLocationE(editLocationE ? editLocationE : locationE);
-        setWorkingStart(editWorkingStart ? editWorkingStart : workingStart);
-        setPosition(editPosition ? editPosition : position);
-        setImage(editImage ? editImage : image);
-        setEmployable(editEmployable ? editEmployable : employable);
+    const saveEmployeeListInfo = (index) => {
+        let updatedEmployeeData = {
+           name:  editName ? editName : name,
+            emailA: editEmailA ? editEmailA : emailA,
+            locationE: editLocationE ? editLocationE : locationE,
+            workingStarted: editWorkingStart ? editWorkingStart : workingStart,
+            position: editPosition ? editPosition : position,
+            image: editImage ? editImage : image,
+            employable: editEmployable ? editEmployable : employable,
+            cv: cv,
+            salary: salary,
+            number: editNumber ? editNumber: number,
+        }
 
-        alert("Information Updated");
+        fetch(`http://localhost:8080/updateEmployee/${index}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application.json",
+            },
+            body: JSON.stringify(updatedEmployeeData),
+        })
+            .then(res => {
+                if(!res.ok) {
+                    throw new Error(`HTTP error! Status: ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(result => {
+                console.log("result: ", result);
+                //Optionally, update your state or take any other actions
+                alert("Employee List Information Updated");
+            })
+            .catch(error => {
+                console.error("Error fetching data: ", error);
+            })
 
         setIsListEdit(false);
     }
@@ -127,8 +211,14 @@ const Home = () => {
         setImage(null);
     }
 
+    const totalEmployees = () => {
+        const totalEmp = employees.length;
+
+        return totalEmp;
+    }
+
     const calculateWorkingDuration = () => {
-        
+        const today = Date().today;
     }
 
     return (
@@ -198,7 +288,7 @@ const Home = () => {
                             <image href={user} width="100%" height="100%" />
                         </svg>
 
-                        <p style={{textAlign: "left", marginLeft: "0.5rem"}}>250 Employees</p>
+                        <p style={{textAlign: "left", marginLeft: "0.5rem"}}>{totalEmployees()} Employees</p>
                     </div>
 
                     <div className="List">
@@ -269,7 +359,7 @@ const Home = () => {
 
                                     <div style={{display: "flex", flexDirection: "row"}}>
                                         <div style={{display: "flex", flexDirection: "row", marginTop:"0.5rem", marginLeft: "3rem"}}>
-                                            <button style={{backgroundColor: "unset", border: "none"}} onClick={() => saveEmployeeListInfo()}>
+                                            <button style={{backgroundColor: "unset", border: "none"}} onClick={(index) => saveEmployeeListInfo(index)}>
                                                 <svg width="1.1rem" height="1.5rem">
                                                     <image href={save} width="100%" height="100%" />
                                                 </svg>
@@ -290,150 +380,79 @@ const Home = () => {
                         ):
                         (
                             <>
-                            <div className="EmpBox">
-                            <div className="EmpBoxTop">
-                                <div style={{position: "relative", marginLeft: "6rem", marginTop: "1rem", display: "flex", flexDirection: "row"}}>
-                                    <svg width="3.5rem" height="3.5rem" style={{borderRadius: "100%", border: "solid", borderColor: "white", borderWidth: 5}}>
-                                        <image href={user2} width="100%" height="100%" />
-                                    </svg>
-
-                                    <p style={{color: "Green", marginTop: "2rem", marginLeft: "-3.5rem", fontWeight: "bold"}}>- Active -</p>
+                            {employees.map((employee, index) => (
+                                <div className="EmpBox" key={index}>
+                                <div className="EmpBoxTop">
+                                    <div style={{position: "relative", marginLeft: "6rem", marginTop: "1rem", display: "flex", flexDirection: "row"}}>
+                                        <svg width="3.5rem" height="3.5rem" style={{borderRadius: "100%", border: "solid", borderColor: "white", borderWidth: 5}}>
+                                            <image href={user2} width="100%" height="100%" />
+                                        </svg>
+    
+                                        <p style={{color: "Green", marginTop: "2rem", marginLeft: "-3.5rem", fontWeight: "bold"}}>- {employee.employable} -</p>
+                                    </div>
+    
+                                    <p style={{fontWeight: "bolder", textAlign: "center", color: "black", position: "relative", marginTop: "-0.1rem", fontSize: "80%"}}>{employee.name}</p>
+                                    <p style={{textAlign: "center", color: "black", position: "relative", marginTop: "-0.8rem", fontSize: "70%", fontWeight: "bold"}}>{employee.position}</p>
                                 </div>
-
-                                <p style={{fontWeight: "bolder", textAlign: "center", color: "black", position: "relative", marginTop: "-0.1rem", fontSize: "80%"}}>John Doe</p>
-                                <p style={{textAlign: "center", color: "black", position: "relative", marginTop: "-0.8rem", fontSize: "70%", fontWeight: "bold"}}>Web Developer</p>
-                            </div>
-
-                            <div style={{display: "flex", flexDirection: "row", marginTop: "2.5rem", marginLeft: "0.5rem", marginBottom: "1rem"}}>
-                                <div style={{marginLeft: "0.5rem", textAlign: "left", marginRight: "0.5rem", width: "50%"}}>
-                                    <div style={{display: "flex", flexDirection: "row"}}>
-                                        <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
-                                            <image href={cellphone} width="100%" height="100%" />
-                                        </svg>
-                                        <p style={{ fontSize: "70%"}}>071 826 4826</p>
+    
+                                <div style={{display: "flex", flexDirection: "row", marginTop: "2.5rem", marginLeft: "0.5rem", marginBottom: "1rem"}}>
+                                    <div style={{marginLeft: "0.5rem", textAlign: "left", marginRight: "0.5rem", width: "50%"}}>
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
+                                                <image href={cellphone} width="100%" height="100%" />
+                                            </svg>
+                                            <p style={{ fontSize: "70%"}}>{employee.number}</p>
+                                        </div>
+    
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
+                                                <image href={location} width="100%" height="100%" />
+                                            </svg>
+                                            <p style={{ fontSize: "70%"}}>{employee.locationE}</p>
+                                        </div>
+    
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
+                                                <image href={calender} width="100%" height="100%" />
+                                            </svg>
+                                        <p style={{ fontSize: "70%"}}>{employee.workingStarted}</p>
+                                        </div>
+                                        
                                     </div>
-
-                                    <div style={{display: "flex", flexDirection: "row"}}>
-                                        <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
-                                            <image href={location} width="100%" height="100%" />
-                                        </svg>
-                                        <p style={{ fontSize: "70%"}}>Kimberley</p>
-                                    </div>
-
-                                    <div style={{display: "flex", flexDirection: "row"}}>
-                                        <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
-                                            <image href={calender} width="100%" height="100%" />
-                                        </svg>
-                                    <p style={{ fontSize: "70%"}}>20/05/2016</p>
-                                    </div>
-                                    
-                                </div>
-
-                                <div style={{marginLeft: "0.5rem", textAlign: "left", marginRight: "0.5rem", width: "50%"}}>
-
-                                    <div style={{display: "flex", flexDirection: "row"}}>
-                                        <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
-                                            <image href={email} width="100%" height="100%" />
-                                        </svg>
-                                        <p style={{ fontSize: "70%"}}>johndoe@gmail.com</p>
-                                    </div>
-
-                                    <div style={{display: "flex", flexDirection: "row"}}>
-                                        <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
-                                            <image href={employed} width="100%" height="100%" />
-                                        </svg>
-                                        <p style={{ fontSize: "70%"}}>5 Years 3 Months</p>
-                                    </div>
-
-                                    <div style={{display: "flex", flexDirection: "row"}}>
-                                        <div style={{display: "flex", flexDirection: "row", marginTop:"0.5rem", marginLeft: "3rem"}}>
-                                            <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleListEdit()}>
-                                                <svg width="1.1rem" height="1.5rem">
-                                                    <image href={edit} width="100%" height="100%" />
+    
+                                    <div style={{marginLeft: "0.5rem", textAlign: "left", marginRight: "0.5rem", width: "50%"}}>
+    
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
+                                                <image href={email} width="100%" height="100%" />
+                                            </svg>
+                                            <p style={{ fontSize: "70%"}}>{employee.emailA}</p>
+                                        </div>
+    
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
+                                                <image href={employed} width="100%" height="100%" />
+                                            </svg>
+                                            <p style={{ fontSize: "70%"}}>5 Years 3 Months</p>
+                                        </div>
+    
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <div style={{display: "flex", flexDirection: "row", marginTop:"0.5rem", marginLeft: "3rem"}}>
+                                                <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleListEdit()}>
+                                                    <svg width="1.1rem" height="1.5rem">
+                                                        <image href={edit} width="100%" height="100%" />
+                                                    </svg>
+                                                </button>
+    
+                                                <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
+                                                    <image href={trash} width="100%" height="100%" />
                                                 </svg>
-                                            </button>
-
-                                            <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
-                                                <image href={trash} width="100%" height="100%" />
-                                            </svg>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-
-
-
-                        <div className="EmpBox">
-                            <div className="EmpBoxTop">
-                                <div style={{position: "relative", marginLeft: "6rem", marginTop: "1rem", display: "flex", flexDirection: "row"}}>
-                                    <svg width="3.5rem" height="3.5rem" style={{borderRadius: "100%", border: "solid", borderColor: "white", borderWidth: 5}}>
-                                        <image href={user5} width="100%" height="100%" />
-                                    </svg>
-
-                                    <p style={{color: "Green", marginTop: "2rem", marginLeft: "-3.5rem", fontWeight: "bold"}}>- Active -</p>
-                                </div>
-
-                                <p style={{fontWeight: "bolder", textAlign: "center", color: "black", position: "relative", marginTop: "-0.1rem", fontSize: "80%"}}>John Doe</p>
-                                <p style={{textAlign: "center", color: "black", position: "relative", marginTop: "-0.8rem", fontSize: "70%", fontWeight: "bold"}}>Web Developer</p>
-                            </div>
-
-                            <div style={{display: "flex", flexDirection: "row", marginTop: "2.5rem", marginLeft: "0.5rem", marginBottom: "1rem"}}>
-                                <div style={{marginLeft: "0.5rem", textAlign: "left", marginRight: "0.5rem", width: "50%"}}>
-                                    <div style={{display: "flex", flexDirection: "row"}}>
-                                        <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
-                                            <image href={cellphone} width="100%" height="100%" />
-                                        </svg>
-                                        <p style={{ fontSize: "70%"}}>071 826 4826</p>
-                                    </div>
-
-                                    <div style={{display: "flex", flexDirection: "row"}}>
-                                        <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
-                                            <image href={location} width="100%" height="100%" />
-                                        </svg>
-                                        <p style={{ fontSize: "70%"}}>Kimberley</p>
-                                    </div>
-
-                                    <div style={{display: "flex", flexDirection: "row"}}>
-                                        <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
-                                            <image href={calender} width="100%" height="100%" />
-                                        </svg>
-                                    <p style={{ fontSize: "70%"}}>20/05/2016</p>
-                                    </div>
-                                    
-                                </div>
-
-                                <div style={{marginLeft: "0.5rem", textAlign: "left", marginRight: "0.5rem", width: "50%"}}>
-
-                                    <div style={{display: "flex", flexDirection: "row"}}>
-                                        <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
-                                            <image href={email} width="100%" height="100%" />
-                                        </svg>
-                                        <p style={{ fontSize: "70%"}}>johndoe@gmail.com</p>
-                                    </div>
-
-                                    <div style={{display: "flex", flexDirection: "row"}}>
-                                        <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
-                                            <image href={employed} width="100%" height="100%" />
-                                        </svg>
-                                        <p style={{ fontSize: "70%"}}>5 Years 3 Months</p>
-                                    </div>
-
-                                    <div style={{display: "flex", flexDirection: "row"}}>
-                                        <div style={{display: "flex", flexDirection: "row", marginTop:"0.5rem", marginLeft: "3rem"}}>
-                                            <svg width="1.1rem" height="1.5rem">
-                                                <image href={edit} width="100%" height="100%" />
-                                            </svg>
-
-                                            <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
-                                                <image href={trash} width="100%" height="100%" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> 
+                            ))}
                             </>
                         )}
                     </div>
@@ -550,6 +569,7 @@ const Home = () => {
                                     <div style={{display: "flex", flexDirection: "row", marginTop: "3rem"}}>
                                         <button className="AddButton"
                                                 type="submit"
+                                                onClick={addNewEmployee}
                                         >
                                             Add Employee
                                         </button>
@@ -609,7 +629,7 @@ const Home = () => {
                                 <image href={user} width="100%" height="100%" />
                             </svg>
 
-                        <p style={{textAlign: "left", marginLeft: "0.5rem"}}>250 Employees</p>
+                        <p style={{textAlign: "left", marginLeft: "0.5rem"}}>{totalEmployees()} Employees</p>
                     </div>
 
                     <div className="List">
@@ -677,7 +697,7 @@ const Home = () => {
                                                 </button>
 
                                                 <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleCancelSalariesEdit()}>
-                                                    <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
+                                                    <svg width="1.5rem" height="1.5rem" style={{marginLeft: "0.1rem"}}>
                                                         <image href={cancel} width="100%" height="100%" />
                                                     </svg>
                                                 </button>
@@ -688,126 +708,67 @@ const Home = () => {
                         ):
                         (
                             <>
-                                <div className="EmpBox">
-                            <div className="EmpBoxTop">
-                                <div style={{position: "relative", marginLeft: "6rem", marginTop: "1rem", display: "flex", flexDirection: "row"}}>
-                                    <svg width="3.5rem" height="3.5rem" style={{borderRadius: "100%", border: "solid", borderColor: "white", borderWidth: 5}}>
-                                        <image href={user2} width="100%" height="100%" />
-                                    </svg>
-
-                                    <p style={{color: "Green", marginTop: "2rem", marginLeft: "-3.5rem", fontWeight: "bold"}}>- Active -</p>
-                                </div>
-
-                                <p style={{fontWeight: "bolder", textAlign: "center", color: "black", position: "relative", marginTop: "-0.1rem", fontSize: "80%"}}>John Doe</p>
-                                <p style={{textAlign: "center", color: "black", position: "relative", marginTop: "-0.8rem", fontSize: "70%", fontWeight: "bold"}}>Web Developer</p>
-                            </div>
-
-                            <div style={{display: "flex", flexDirection: "row", marginTop: "2rem", marginLeft: "2.5rem"}}>
-                                        <svg width="1rem" height="1rem" style={{marginTop: "0.95rem", marginRight: "0.5rem"}}>
-                                            <image href={salaries_unselected} width="100%" height="100%" />
+                            {employees.map((employee, index) => (
+                                <div className="EmpBox" key={index}>
+                                <div className="EmpBoxTop">
+                                    <div style={{position: "relative", marginLeft: "6rem", marginTop: "1rem", display: "flex", flexDirection: "row"}}>
+                                        <svg width="3.5rem" height="3.5rem" style={{borderRadius: "100%", border: "solid", borderColor: "white", borderWidth: 5}}>
+                                            <image href={user2} width="100%" height="100%" />
                                         </svg>
-                                        <p style={{ fontSize: "100%", fontWeight: "bold"}}>R 380 000 per annum</p>
-                            </div>
-
-                            <div style={{display: "flex", flexDirection: "row", marginTop: "0.01rem", marginLeft: "0.5rem"}}>
-
-                                <div style={{marginLeft: "0.5rem", textAlign: "left", marginRight: "0.5rem", width: "50%"}}>
-
-                                    <div style={{display: "flex", flexDirection: "row"}}>
-                                        <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
-                                            <image href={calender} width="100%" height="100%" />
-                                        </svg>
-                                    <p style={{ fontSize: "70%"}}>20/05/2016</p>
+    
+                                        <p style={{color: "Green", marginTop: "2rem", marginLeft: "-3.5rem", fontWeight: "bold"}}>- {employee.employable} -</p>
                                     </div>
-                                    
+    
+                                    <p style={{fontWeight: "bolder", textAlign: "center", color: "black", position: "relative", marginTop: "-0.1rem", fontSize: "80%"}}>{employee.name}</p>
+                                    <p style={{textAlign: "center", color: "black", position: "relative", marginTop: "-0.8rem", fontSize: "70%", fontWeight: "bold"}}>{employee.position}</p>
                                 </div>
-
-                                <div style={{marginLeft: "0.5rem", textAlign: "left", marginRight: "0.5rem", width: "50%"}}>
-
-                                    <div style={{display: "flex", flexDirection: "row"}}>
-                                        <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
-                                            <image href={employed} width="100%" height="100%" />
-                                        </svg>
-                                        <p style={{ fontSize: "70%"}}>5 Years 3 Months</p>
+    
+                                <div style={{display: "flex", flexDirection: "row", marginTop: "2rem", marginLeft: "2.5rem"}}>
+                                            <svg width="1rem" height="1rem" style={{marginTop: "0.95rem", marginRight: "0.5rem"}}>
+                                                <image href={salaries_unselected} width="100%" height="100%" />
+                                            </svg>
+                                            <p style={{ fontSize: "100%", fontWeight: "bold"}}>R {employee.salary} per annum</p>
+                                </div>
+    
+                                <div style={{display: "flex", flexDirection: "row", marginTop: "0.01rem", marginLeft: "0.5rem"}}>
+    
+                                    <div style={{marginLeft: "0.5rem", textAlign: "left", marginRight: "0.5rem", width: "50%"}}>
+    
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
+                                                <image href={calender} width="100%" height="100%" />
+                                            </svg>
+                                        <p style={{ fontSize: "70%"}}>{employee.workingStarted}</p>
+                                        </div>
+                                        
+                                    </div>
+    
+                                    <div style={{marginLeft: "0.5rem", textAlign: "left", marginRight: "0.5rem", width: "50%"}}>
+    
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
+                                                <image href={employed} width="100%" height="100%" />
+                                            </svg>
+                                            <p style={{ fontSize: "70%"}}>5 Years 3 Months</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-
-                                <div style={{display: "flex", flexDirection: "row", marginLeft: "8.5rem", marginBottom: "0.5rem"}}>
-                                            <div style={{display: "flex", flexDirection: "row", marginLeft: "3rem"}}>
-                                                <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleSalariesEdit()}>
-                                                    <svg width="1.1rem" height="1.5rem">
-                                                        <image href={edit} width="100%" height="100%" />
+    
+                                    <div style={{display: "flex", flexDirection: "row", marginLeft: "8.5rem", marginBottom: "0.5rem"}}>
+                                                <div style={{display: "flex", flexDirection: "row", marginLeft: "3rem"}}>
+                                                    <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleSalariesEdit()}>
+                                                        <svg width="1.1rem" height="1.5rem">
+                                                            <image href={edit} width="100%" height="100%" />
+                                                        </svg>
+                                                    </button>
+    
+                                                    <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
+                                                        <image href={trash} width="100%" height="100%" />
                                                     </svg>
-                                                </button>
-
-                                                <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
-                                                    <image href={trash} width="100%" height="100%" />
-                                                </svg>
-                                            </div>
-                                </div>
-                        </div>
-
-
-
-
-                        <div className="EmpBox">
-                            <div className="EmpBoxTop">
-                                <div style={{position: "relative", marginLeft: "6rem", marginTop: "1rem", display: "flex", flexDirection: "row"}}>
-                                    <svg width="3.5rem" height="3.5rem" style={{borderRadius: "100%", border: "solid", borderColor: "white", borderWidth: 5}}>
-                                        <image href={user5} width="100%" height="100%" />
-                                    </svg>
-
-                                    <p style={{color: "Green", marginTop: "2rem", marginLeft: "-3.5rem", fontWeight: "bold"}}>- Active -</p>
-                                </div>
-
-                                <p style={{fontWeight: "bolder", textAlign: "center", color: "black", position: "relative", marginTop: "-0.1rem", fontSize: "80%"}}>John Doe</p>
-                                <p style={{textAlign: "center", color: "black", position: "relative", marginTop: "-0.8rem", fontSize: "70%", fontWeight: "bold"}}>Web Developer</p>
-                            </div>
-
-                            <div style={{display: "flex", flexDirection: "row", marginTop: "2rem", marginLeft: "2.5rem"}}>
-                                        <svg width="1rem" height="1rem" style={{marginTop: "0.95rem", marginRight: "0.5rem"}}>
-                                            <image href={salaries_unselected} width="100%" height="100%" />
-                                        </svg>
-                                        <p style={{ fontSize: "100%", fontWeight: "bold"}}>R 380 000 per annum</p>
-                            </div>
-
-                            <div style={{display: "flex", flexDirection: "row", marginTop: "0.01rem", marginLeft: "0.5rem"}}>
-
-                                <div style={{marginLeft: "0.5rem", textAlign: "left", marginRight: "0.5rem", width: "50%"}}>
-
-                                    <div style={{display: "flex", flexDirection: "row"}}>
-                                        <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
-                                            <image href={calender} width="100%" height="100%" />
-                                        </svg>
-                                    <p style={{ fontSize: "70%"}}>20/05/2016</p>
+                                                </div>
                                     </div>
-                                    
-                                </div>
-
-                                <div style={{marginLeft: "0.5rem", textAlign: "left", marginRight: "0.5rem", width: "50%"}}>
-
-                                    <div style={{display: "flex", flexDirection: "row"}}>
-                                        <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
-                                            <image href={employed} width="100%" height="100%" />
-                                        </svg>
-                                        <p style={{ fontSize: "70%"}}>5 Years 3 Months</p>
-                                    </div>
-                                </div>
                             </div>
-
-                                <div style={{display: "flex", flexDirection: "row", marginLeft: "8.5rem", marginBottom: "0.5rem"}}>
-                                            <div style={{display: "flex", flexDirection: "row", marginLeft: "3rem"}}>
-                                                <svg width="1.1rem" height="1.5rem">
-                                                    <image href={edit} width="100%" height="100%" />
-                                                </svg>
-
-                                                <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
-                                                    <image href={trash} width="100%" height="100%" />
-                                                </svg>
-                                            </div>
-                                </div>
-                        </div>
+                            ))}
                             </>
                         )}
                     </div>
