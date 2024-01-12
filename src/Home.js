@@ -53,9 +53,26 @@ const Home = () => {
 
     //Function to toggle between list edit or display in Employee List
     const [isListEdit, setIsListEdit] = useState(false);
+    const [editingIndex, setEditingIndex] = useState(null);
 
-    const handleListEdit = () => {
-        setIsListEdit(true);
+
+    const handleListEdit = (index) => {
+        if(employees && employees.length > index && employees[index]) {
+            setEditingIndex(index);
+            setIsListEdit(true);
+
+            setEditName(employees[index].name);
+            setEditEmailA(employees[index].emailA);
+            setEditImage(employees[index].image);
+            setEditEmployable(employees[index].employable);
+            setEditPosition(employees[index].position);
+            setEditNumber(employees[index].number);
+            setEditLocationE(employees[index].employees);
+            setEditWorkingStart(employees[index].workingStart)
+        } else {
+            console.error("Invalid index or employees array is empty");
+        }
+        
     }
 
     const handleCancelListEdit = () => {
@@ -65,8 +82,20 @@ const Home = () => {
     //Function to toggle between salaries edit or display in Employee List
     const [isSalariesEdit, setIsSalariesEdit] = useState(false);
 
-    const handleSalariesEdit = () => {
-        setIsSalariesEdit(true);
+    const handleSalariesEdit = (index) => {
+        if(employees && employees.length > index && employees[index]) {
+            setEditingIndex(index);
+            setIsSalariesEdit(true);
+
+            setEditName(employees[index].name);
+            setEditImage(employees[index].image);
+            setEditEmployable(employees[index].employable);
+            setEditPosition(employees[index].position);
+            setEditWorkingStart(employees[index].workingStart);
+            setEditSalary(employees[index].salary);
+        } else {
+            console.error("Invalid index or employees array is empty");
+        }
     }
 
     const handleCancelSalariesEdit = () => {
@@ -149,7 +178,7 @@ const Home = () => {
 
     const saveEmployeeListInfo = (index) => {
         let updatedEmployeeData = {
-           name:  editName ? editName : name,
+            name:  editName ? editName : name,
             emailA: editEmailA ? editEmailA : emailA,
             locationE: editLocationE ? editLocationE : locationE,
             workingStarted: editWorkingStart ? editWorkingStart : workingStart,
@@ -186,14 +215,41 @@ const Home = () => {
         setIsListEdit(false);
     }
 
-    const saveSalariesListInfo = () => {
-        setName(editName ? editName : name);
-        setSalary(editSalary ? editSalary : salary);
-        setWorkingStart(editWorkingStart ? editWorkingStart : workingStart);
-        setImage(editImage ? editImage : image);
-        setEmployable(editEmployable ? editEmployable : employable);
+    const saveSalariesListInfo = (index) => {
+        let updatedEmployeeData = {
+            name:  editName ? editName : name,
+            workingStarted: editWorkingStart ? editWorkingStart : workingStart,
+            position: editPosition ? editPosition : position,
+            image: editImage ? editImage : image,
+            employable: editEmployable ? editEmployable : employable,
+            cv: cv,
+            salary: editSalary ? editSalary : salary,
+            number: number,
+            location: location,
+            emailA: emailA,
+        }
 
-        alert("Information Updated");
+        fetch(`http://localhost:8080/updateEmployee/${index}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application.json",
+            },
+            body: JSON.stringify(updatedEmployeeData),
+        })
+            .then(res => {
+                if(!res.ok) {
+                    throw new Error(`HTTP error! Status: ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(result => {
+                console.log("result: ", result);
+                //Optionally, update your state or take any other actions
+                alert("Employee Salary Information Updated");
+            })
+            .catch(error => {
+                console.error("Error fetching data: ", error);
+            })
 
         setIsSalariesEdit(false);
     }
@@ -295,8 +351,12 @@ const Home = () => {
                         {isListEdit ? 
                         (
                         <>
-                            <div className="EmpBox">
-                            <div className="EmpBoxTop">
+                        {employees.map((employee, index) => (
+                            <div className="EmpBox" key={index}>
+                                {editingIndex === index ?
+                                (
+                                    <>
+                                    <div className="EmpBoxTop">
                                 <div style={{position: "relative", marginLeft: "6rem", marginTop: "1rem", display: "flex", flexDirection: "row"}}>
                                     <label htmlFor="imageInput">
                                         <svg width="3.5rem" height="3.5rem" style={{ borderRadius: '100%', border: 'solid', borderColor: 'white', borderWidth: 5 }}>
@@ -312,8 +372,8 @@ const Home = () => {
                                     </select>
                                 </div>
 
-                                <input placeholder="John Doe" value={editName} onChange={(event) => setEditName(event.target.value)} style={{fontWeight: "bolder", textAlign: "center", color: "black", position: "relative", marginTop: "-0.1rem", fontSize: "80%", border: "none", width: "98%"}} />
-                                <input placeholder="Web Developer" value={editPosition} onChange={(event) => setEditPosition(event.target.value)} style={{textAlign: "center", color: "black", position: "relative", marginTop: "-0.8rem", fontSize: "70%", fontWeight: "bold", border: "none", width: "98%"}} />
+                                <input placeholder={employee.name} value={editName} onChange={(event) => setEditName(event.target.value)} style={{fontWeight: "bolder", textAlign: "center", color: "black", position: "relative", marginTop: "-0.1rem", fontSize: "80%", border: "none", width: "98%"}} />
+                                <input placeholder={employee.position} value={editPosition} onChange={(event) => setEditPosition(event.target.value)} style={{textAlign: "center", color: "black", position: "relative", marginTop: "-0.8rem", fontSize: "70%", fontWeight: "bold", border: "none", width: "98%"}} />
                             </div>
 
                             <div style={{display: "flex", flexDirection: "row", marginTop: "2.8rem", marginLeft: "0.5rem", marginBottom: "1rem"}}>
@@ -322,21 +382,21 @@ const Home = () => {
                                         <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
                                             <image href={cellphone} width="100%" height="100%" />
                                         </svg>
-                                        <input placeholder="071 826 4826" value={editNumber} onChange={(event) => setEditNumber(event.target.value)} style={{ fontSize: "70%", border: "none", width: "100%", height: "20%", position: "relative", textAlign: "center", marginTop: "0.8rem"}} />
+                                        <input placeholder={employee.number} value={editNumber} onChange={(event) => setEditNumber(event.target.value)} style={{ fontSize: "70%", border: "none", width: "100%", height: "20%", position: "relative", textAlign: "center", marginTop: "0.8rem"}} />
                                     </div>
 
                                     <div style={{display: "flex", flexDirection: "row"}}>
                                         <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
                                             <image href={location} width="100%" height="100%" />
                                         </svg>
-                                        <input placeholder="Kimberley" value={editLocationE} onChange={(event) => setEditLocationE(event.target.value)} style={{ fontSize: "70%", border: "none", width: "100%", height: "20%", position: "relative", textAlign: "center", marginTop: "0.8rem"}} />
+                                        <input placeholder={employee.locationE} value={editLocationE} onChange={(event) => setEditLocationE(event.target.value)} style={{ fontSize: "70%", border: "none", width: "100%", height: "20%", position: "relative", textAlign: "center", marginTop: "0.8rem"}} />
                                     </div>
 
                                     <div style={{display: "flex", flexDirection: "row"}}>
                                         <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
                                             <image href={calender} width="100%" height="100%" />
                                         </svg>
-                                        <input placeholder="20/05/2016" value={editWorkingStart} onChange={(event) => setEditWorkingStart(event.target.value)} style={{ fontSize: "70%", border: "none", width: "100%", height: "20%", position: "relative", textAlign: "center", marginTop: "0.8rem"}} />
+                                        <input placeholder={employee.workingStarted} value={editWorkingStart} onChange={(event) => setEditWorkingStart(event.target.value)} style={{ fontSize: "70%", border: "none", width: "100%", height: "20%", position: "relative", textAlign: "center", marginTop: "0.8rem"}} />
                                     </div>
                                     
                                 </div>
@@ -347,7 +407,7 @@ const Home = () => {
                                         <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
                                             <image href={email} width="100%" height="100%" />
                                         </svg>
-                                        <input placeholder="johndoe@gmail.com" value={editEmailA} onChange={(event) => setEditEmailA(event.target.value)} style={{ fontSize: "70%", border: "none", width: "100%", height: "20%", position: "relative", textAlign: "center", marginTop: "0.8rem"}} />
+                                        <input placeholder={employee.emailA} value={editEmailA} onChange={(event) => setEditEmailA(event.target.value)} style={{ fontSize: "70%", border: "none", width: "100%", height: "20%", position: "relative", textAlign: "center", marginTop: "0.8rem"}} />
                                     </div>
 
                                     <div style={{display: "flex", flexDirection: "row"}}>
@@ -375,7 +435,86 @@ const Home = () => {
                                     </div>
                                 </div>
                             </div>
+                                    </>
+                                )
+                                :
+                                (
+                                    <>
+                                    <div className="EmpBoxTop">
+                                    <div style={{position: "relative", marginLeft: "6rem", marginTop: "1rem", display: "flex", flexDirection: "row"}}>
+                                        <svg width="3.5rem" height="3.5rem" style={{borderRadius: "100%", border: "solid", borderColor: "white", borderWidth: 5}}>
+                                            <image href={user2} width="100%" height="100%" />
+                                        </svg>
+    
+                                        <p style={{color: "Green", marginTop: "2rem", marginLeft: "-3.5rem", fontWeight: "bold"}}>- {employee.employable} -</p>
+                                    </div>
+    
+                                    <p style={{fontWeight: "bolder", textAlign: "center", color: "black", position: "relative", marginTop: "-0.1rem", fontSize: "80%"}}>{employee.name}</p>
+                                    <p style={{textAlign: "center", color: "black", position: "relative", marginTop: "-0.8rem", fontSize: "70%", fontWeight: "bold"}}>{employee.position}</p>
+                                </div>
+    
+                                <div style={{display: "flex", flexDirection: "row", marginTop: "2.5rem", marginLeft: "0.5rem", marginBottom: "1rem"}}>
+                                    <div style={{marginLeft: "0.5rem", textAlign: "left", marginRight: "0.5rem", width: "50%"}}>
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
+                                                <image href={cellphone} width="100%" height="100%" />
+                                            </svg>
+                                            <p style={{ fontSize: "70%"}}>{employee.number}</p>
+                                        </div>
+    
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
+                                                <image href={location} width="100%" height="100%" />
+                                            </svg>
+                                            <p style={{ fontSize: "70%"}}>{employee.locationE}</p>
+                                        </div>
+    
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
+                                                <image href={calender} width="100%" height="100%" />
+                                            </svg>
+                                        <p style={{ fontSize: "70%"}}>{employee.workingStarted}</p>
+                                        </div>
+                                        
+                                    </div>
+    
+                                    <div style={{marginLeft: "0.5rem", textAlign: "left", marginRight: "0.5rem", width: "50%"}}>
+    
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
+                                                <image href={email} width="100%" height="100%" />
+                                            </svg>
+                                            <p style={{ fontSize: "70%"}}>{employee.emailA}</p>
+                                        </div>
+    
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
+                                                <image href={employed} width="100%" height="100%" />
+                                            </svg>
+                                            <p style={{ fontSize: "70%"}}>5 Years 3 Months</p>
+                                        </div>
+    
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <div style={{display: "flex", flexDirection: "row", marginTop:"0.5rem", marginLeft: "3rem"}}>
+                                                <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleListEdit(index)}>
+                                                    <svg width="1.1rem" height="1.5rem">
+                                                        <image href={edit} width="100%" height="100%" />
+                                                    </svg>
+                                                </button>
+    
+                                                <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
+                                                    <image href={trash} width="100%" height="100%" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                    </>
+                                )
+                                }
+                            
                         </div>
+                        ))}
                         </>
                         ):
                         (
@@ -438,7 +577,7 @@ const Home = () => {
     
                                         <div style={{display: "flex", flexDirection: "row"}}>
                                             <div style={{display: "flex", flexDirection: "row", marginTop:"0.5rem", marginLeft: "3rem"}}>
-                                                <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleListEdit()}>
+                                                <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleListEdit(index)}>
                                                     <svg width="1.1rem" height="1.5rem">
                                                         <image href={edit} width="100%" height="100%" />
                                                     </svg>
@@ -636,8 +775,12 @@ const Home = () => {
                         {isSalariesEdit ? 
                         (
                             <>
-                                <div className="EmpBox">
-                            <div className="EmpBoxTop">
+                               {employees.map((employee, index) => ( 
+                                <div className="EmpBox" key={index}>
+                                    {editingIndex === index ?
+                                    (
+                                        <>
+                                        <div className="EmpBoxTop">
                                 <div style={{position: "relative", marginLeft: "6rem", marginTop: "1rem", display: "flex", flexDirection: "row"}}>
                                     <label htmlFor="imageInput">
                                         <svg width="3.5rem" height="3.5rem" style={{borderRadius: "100%", border: "solid", borderColor: "white", borderWidth: 5}}>
@@ -653,7 +796,7 @@ const Home = () => {
                                     </select>
                                 </div>
 
-                                <input placeholder="John Doe" value={editName} onChange={(event) => setEditName(event.target.value)} style={{fontWeight: "bolder", textAlign: "center", color: "black", position: "relative", marginTop: "-0.1rem", fontSize: "80%", border: "none", width: "98%"}} />
+                                <input placeholder={employee.name} value={editName} onChange={(event) => setEditName(event.target.value)} style={{fontWeight: "bolder", textAlign: "center", color: "black", position: "relative", marginTop: "-0.1rem", fontSize: "80%", border: "none", width: "98%"}} />
                                 
                             </div>
 
@@ -661,7 +804,7 @@ const Home = () => {
                                         <svg width="1.8rem" height="1.8rem" style={{marginTop: "0.95rem", marginRight: "0.5rem"}}>
                                             <image href={salaries_unselected} width="100%" height="100%" />
                                         </svg>
-                                        <input placeholder="R 380 000 per annum" value={editSalary} onChange={(event) => setEditSalary(event.target.value)} style={{ fontSize: "100%", fontWeight: "bold", position: "relative", border: "none", width: "100%", marginLeft: "0.3rem", paddingTop: "0.5rem", height: "60%", marginTop: "0.3rem", textAlign: "left"}} />
+                                        <input placeholder={employee.salary} value={editSalary} onChange={(event) => setEditSalary(event.target.value)} style={{ fontSize: "100%", fontWeight: "bold", position: "relative", border: "none", width: "100%", marginLeft: "0.3rem", paddingTop: "0.5rem", height: "60%", marginTop: "0.3rem", textAlign: "left"}} />
                             </div>
 
                             <div style={{display: "flex", flexDirection: "row", marginTop: "0.01rem", marginLeft: "0.5rem"}}>
@@ -672,7 +815,7 @@ const Home = () => {
                                         <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
                                             <image href={calender} width="100%" height="100%" />
                                         </svg>
-                                        <input placeholder="20/05/2016" value={editWorkingStart} onChange={(event) => setEditWorkingStart(event.target.value)} style={{ fontSize: "70%", border: "none", width: "60%", height: "20%", position: "relative", textAlign: "center", marginTop: "0.8rem"}} />
+                                        <input placeholder={employee.workingStarted} value={editWorkingStart} onChange={(event) => setEditWorkingStart(event.target.value)} style={{ fontSize: "70%", border: "none", width: "60%", height: "20%", position: "relative", textAlign: "center", marginTop: "0.8rem"}} />
                                     </div>
                                     
                                 </div>
@@ -690,7 +833,7 @@ const Home = () => {
 
                                 <div style={{display: "flex", flexDirection: "row", marginLeft: "8.5rem", marginBottom: "0.5rem"}}>
                                             <div style={{display: "flex", flexDirection: "row", marginLeft: "3rem"}}>
-                                                <button style={{backgroundColor: "unset", border: "none"}} onClick={() => saveSalariesListInfo()}>
+                                                <button style={{backgroundColor: "unset", border: "none"}} onClick={() => saveSalariesListInfo(index)}>
                                                     <svg width="1.1rem" height="1.5rem">
                                                         <image href={save} width="100%" height="100%" />
                                                     </svg>
@@ -703,7 +846,73 @@ const Home = () => {
                                                 </button>
                                             </div>
                                 </div>
+                                        </>
+                                    )
+                                    :
+                                    (
+                                        <>
+                                        <div className="EmpBoxTop">
+                                    <div style={{position: "relative", marginLeft: "6rem", marginTop: "1rem", display: "flex", flexDirection: "row"}}>
+                                        <svg width="3.5rem" height="3.5rem" style={{borderRadius: "100%", border: "solid", borderColor: "white", borderWidth: 5}}>
+                                            <image href={user2} width="100%" height="100%" />
+                                        </svg>
+    
+                                        <p style={{color: "Green", marginTop: "2rem", marginLeft: "-3.5rem", fontWeight: "bold"}}>- {employee.employable} -</p>
+                                    </div>
+    
+                                    <p style={{fontWeight: "bolder", textAlign: "center", color: "black", position: "relative", marginTop: "-0.1rem", fontSize: "80%"}}>{employee.name}</p>
+                                    <p style={{textAlign: "center", color: "black", position: "relative", marginTop: "-0.8rem", fontSize: "70%", fontWeight: "bold"}}>{employee.position}</p>
+                                </div>
+    
+                                <div style={{display: "flex", flexDirection: "row", marginTop: "2rem", marginLeft: "2.5rem"}}>
+                                            <svg width="1rem" height="1rem" style={{marginTop: "0.95rem", marginRight: "0.5rem"}}>
+                                                <image href={salaries_unselected} width="100%" height="100%" />
+                                            </svg>
+                                            <p style={{ fontSize: "100%", fontWeight: "bold"}}>R {employee.salary} per annum</p>
+                                </div>
+    
+                                <div style={{display: "flex", flexDirection: "row", marginTop: "0.01rem", marginLeft: "0.5rem"}}>
+    
+                                    <div style={{marginLeft: "0.5rem", textAlign: "left", marginRight: "0.5rem", width: "50%"}}>
+    
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
+                                                <image href={calender} width="100%" height="100%" />
+                                            </svg>
+                                        <p style={{ fontSize: "70%"}}>{employee.workingStarted}</p>
+                                        </div>
+                                        
+                                    </div>
+    
+                                    <div style={{marginLeft: "0.5rem", textAlign: "left", marginRight: "0.5rem", width: "50%"}}>
+    
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <svg width="0.8rem" height="0.8rem" style={{marginTop: "0.75rem", marginRight: "0.5rem"}}>
+                                                <image href={employed} width="100%" height="100%" />
+                                            </svg>
+                                            <p style={{ fontSize: "70%"}}>5 Years 3 Months</p>
+                                        </div>
+                                    </div>
+                                </div>
+    
+                                    <div style={{display: "flex", flexDirection: "row", marginLeft: "8.5rem", marginBottom: "0.5rem"}}>
+                                                <div style={{display: "flex", flexDirection: "row", marginLeft: "3rem"}}>
+                                                    <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleSalariesEdit(index)}>
+                                                        <svg width="1.1rem" height="1.5rem">
+                                                            <image href={edit} width="100%" height="100%" />
+                                                        </svg>
+                                                    </button>
+    
+                                                    <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
+                                                        <image href={trash} width="100%" height="100%" />
+                                                    </svg>
+                                                </div>
+                                    </div>
+                                        </>
+                                    )
+                                    }
                         </div>
+                               ))}
                             </>
                         ):
                         (
@@ -756,7 +965,7 @@ const Home = () => {
     
                                     <div style={{display: "flex", flexDirection: "row", marginLeft: "8.5rem", marginBottom: "0.5rem"}}>
                                                 <div style={{display: "flex", flexDirection: "row", marginLeft: "3rem"}}>
-                                                    <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleSalariesEdit()}>
+                                                    <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleSalariesEdit(index)}>
                                                         <svg width="1.1rem" height="1.5rem">
                                                             <image href={edit} width="100%" height="100%" />
                                                         </svg>
