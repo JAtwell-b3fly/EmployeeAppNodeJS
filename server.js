@@ -27,6 +27,9 @@ app.use(cors());
 
 //Defining our endpoint....>>>>>
 app.post("/addEmployee", async (req, res) => {
+    //generating a random number to uniquely identify a specific employee
+    const randomEmployeeId = Math.floor(Math.random() * 1000000);
+
     //creating the object that stores all the employee information
     const employees = {
         name: req.body.name,
@@ -39,6 +42,7 @@ app.post("/addEmployee", async (req, res) => {
         salary: req.body.salary,
         cv: req.body.cv,
         image: req.body.image,
+        employeeId : randomEmployeeId,
     };
     //adding the employees information to the employees collection in firestore
     const response = db.collection("employees").add(employees);
@@ -73,19 +77,26 @@ app.get("/getEmployees", async (req, res) => {
 //Defining the endpoint... >>>
 app.put("/updateEmployee/:employeeId", async (req, res) => {
     try {
-        const employeeId = req.params.employeeId;
 
-        // Fetch the existing employee document from the "employees" collection
-        const employeeRef = db.collection("employees").doc(employeeId);
-        const employeeDoc = await employeeRef.get();
+        const employeeId = parseInt(req.params.employeeId);
 
-        if (!employeeDoc.exists) {
-            // If the employee does not exist, return an error
-            res.status(404).json({ error: "Employee not found" });
-            return;
+        // Check if the employee with the given ID exists
+        const employeeRef = db.collection("employees").where("employeeId", "==", employeeId);
+        const querySnapshot = await employeeRef.get();
+
+        console.log("Query result: ", querySnapshot.docs);
+
+        if (querySnapshot.empty) {
+            console.log("Employee not found");
+            return res.status(404).json({ error: "Employee not found" });
         }
 
-        // Update the employee information based on the request body
+        //Since there should only be one document with this Id
+        const employeeDoc = querySnapshot.docs[0];
+
+        console.log("Document belonging to selected employee: ", employeeDoc);
+
+        // Update the employee information
         const updatedEmployee = {
             name: req.body.name,
             emailA: req.body.emailA,
@@ -97,22 +108,42 @@ app.put("/updateEmployee/:employeeId", async (req, res) => {
             salary: req.body.salary,
             cv: req.body.cv,
             image: req.body.image,
+            employeeId: req.body.employeeId,
         };
 
-        // Update the document in the "employees" collection
-        await employeeRef.update(updatedEmployee);
+        console.log("Updating employee data: ", updatedEmployee);
 
-        // Return a success response
+        // Perform the update
+        await employeeDoc.ref.update(updatedEmployee);
+
         res.json({ message: "Employee updated successfully" });
     } catch (error) {
-        // Return an error response
         res.status(500).json({ error: error.message });
     }
-})
-
+});
 
 //Deleting existing data
 //Defining the endpoint... >>>
+app.delete("/deleteEmployee/:employeeId", async (req, res) => {
+    try {
+        const employeeId = req.params.employeeId;
+
+        // Check if the employee with the given ID exists
+        const employeeRef = db.collection("employees").doc(employeeId);
+        const employeeSnapshot = await employeeRef.get();
+
+        if (!employeeSnapshot.exists) {
+            return res.status(404).json({ error: "Employee not found" });
+        }
+
+        // Perform the delete operation
+        await employeeRef.delete();
+
+        res.json({ message: "Employee deleted successfully", employeeId: employeeId });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 
 //Define the port the server will run on
