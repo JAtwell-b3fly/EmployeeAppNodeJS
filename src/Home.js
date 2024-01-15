@@ -56,19 +56,31 @@ const Home = () => {
     const [editingIndex, setEditingIndex] = useState(null);
 
 
-    const handleListEdit = (index) => {
-        if(employees && employees.length > index && employees[index]) {
-            setEditingIndex(index);
+    const handleListEdit = (employeeId) => {
+
+        console.log("handleListEdit called with employeeId:", employeeId);
+        console.log("Current employees array: ", employees);
+
+        const employeeToEdit = employees.find(emp => emp.employeeId === employeeId);
+
+        console.log("Found employee:", employeeToEdit);
+
+        console.log('employeeToEdit:', employeeToEdit);
+        console.log('editName:', editName);
+
+        if (employeeToEdit) {
+            setEditingIndex(employeeId);
             setIsListEdit(true);
 
-            setEditName(employees[index].name);
-            setEditEmailA(employees[index].emailA);
-            setEditImage(employees[index].image);
-            setEditEmployable(employees[index].employable);
-            setEditPosition(employees[index].position);
-            setEditNumber(employees[index].number);
-            setEditLocationE(employees[index].employees);
-            setEditWorkingStart(employees[index].workingStart)
+            
+            setEditName(editName === "" ? employeeToEdit?.name : editName);
+            setEditEmailA(editEmailA === "" ? employeeToEdit?.emailA : editEmailA);
+            //setEditImage(editImage === "" ? employeeToEdit?.image : editImage);
+            setEditEmployable(editEmployable === "" ? employeeToEdit?.employable : editEmployable);
+            setEditPosition(editPosition === "" ? employeeToEdit?.position : editPosition);
+            setEditNumber(editNumber === "" ? employeeToEdit?.number : editNumber);
+            setEditLocationE(editLocationE === "" ? employeeToEdit?.locationE : editLocationE);
+            setEditWorkingStart(editWorkingStart === "" ? employeeToEdit?.workingStarted : editWorkingStart)
         } else {
             console.error("Invalid index or employees array is empty");
         }
@@ -116,7 +128,7 @@ const Home = () => {
     const [workingStart, setWorkingStart] = useState("");
     const [editWorkingStart, setEditWorkingStart] = useState("");
     const [employable, setEmployable] = useState("Active");
-    const [editEmployable, setEditEmployable] = useState("Active");
+    const [editEmployable, setEditEmployable] = useState("");
     const [salary, setSalary] = useState(null);
     const [editSalary, setEditSalary] = useState(null);
     const [cv, setCV] = useState(null);
@@ -176,7 +188,9 @@ const Home = () => {
         }
     }
 
-    const saveEmployeeListInfo = (index) => {
+    const saveEmployeeListInfo = (employeeId) => {
+        console.log("EmployeeId: ", employeeId);
+
         let updatedEmployeeData = {
             name:  editName ? editName : name,
             emailA: editEmailA ? editEmailA : emailA,
@@ -188,12 +202,15 @@ const Home = () => {
             cv: cv,
             salary: salary,
             number: editNumber ? editNumber: number,
+            employeeId: employeeId,
         }
 
-        fetch(`http://localhost:8080/updateEmployee/${index}`, {
+        console.log("UpdatedEmployeeData: ", updatedEmployeeData);
+
+        fetch(`http://localhost:8080/updateEmployee/${employeeId}`, {
             method: "PUT",
             headers: {
-                "Content-Type": "application.json",
+                "Content-Type": "application/json",
             },
             body: JSON.stringify(updatedEmployeeData),
         })
@@ -352,8 +369,8 @@ const Home = () => {
                         (
                         <>
                         {employees.map((employee, index) => (
-                            <div className="EmpBox" key={index}>
-                                {editingIndex === index ?
+                            <div className="EmpBox" key={employee.employeeId}>
+                                {isListEdit && editingIndex === employee.employeeId ?
                                 (
                                     <>
                                     <div className="EmpBoxTop">
@@ -419,7 +436,7 @@ const Home = () => {
 
                                     <div style={{display: "flex", flexDirection: "row"}}>
                                         <div style={{display: "flex", flexDirection: "row", marginTop:"0.5rem", marginLeft: "3rem"}}>
-                                            <button style={{backgroundColor: "unset", border: "none"}} onClick={(index) => saveEmployeeListInfo(index)}>
+                                            <button style={{backgroundColor: "unset", border: "none"}} onClick={() => saveEmployeeListInfo(employee.employeeId)}>
                                                 <svg width="1.1rem" height="1.5rem">
                                                     <image href={save} width="100%" height="100%" />
                                                 </svg>
@@ -496,7 +513,7 @@ const Home = () => {
     
                                         <div style={{display: "flex", flexDirection: "row"}}>
                                             <div style={{display: "flex", flexDirection: "row", marginTop:"0.5rem", marginLeft: "3rem"}}>
-                                                <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleListEdit(index)}>
+                                                <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleListEdit(employee.employeeId)}>
                                                     <svg width="1.1rem" height="1.5rem">
                                                         <image href={edit} width="100%" height="100%" />
                                                     </svg>
@@ -520,7 +537,7 @@ const Home = () => {
                         (
                             <>
                             {employees.map((employee, index) => (
-                                <div className="EmpBox" key={index}>
+                                <div className="EmpBox" key={employee.employeeId}>
                                 <div className="EmpBoxTop">
                                     <div style={{position: "relative", marginLeft: "6rem", marginTop: "1rem", display: "flex", flexDirection: "row"}}>
                                         <svg width="3.5rem" height="3.5rem" style={{borderRadius: "100%", border: "solid", borderColor: "white", borderWidth: 5}}>
@@ -577,7 +594,7 @@ const Home = () => {
     
                                         <div style={{display: "flex", flexDirection: "row"}}>
                                             <div style={{display: "flex", flexDirection: "row", marginTop:"0.5rem", marginLeft: "3rem"}}>
-                                                <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleListEdit(index)}>
+                                                <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleListEdit(employee.employeeId)}>
                                                     <svg width="1.1rem" height="1.5rem">
                                                         <image href={edit} width="100%" height="100%" />
                                                     </svg>
@@ -739,8 +756,8 @@ const Home = () => {
                                             <input style={{width: "15rem", height: "5rem", borderRadius: "1rem", border: "none", textAlign: "center", padding: "0.5rem", fontSize: "90%"}} 
                                                     type="image"
                                                     alt="Profile Picture of Employee"
-                                                    value={image}
-                                                    onChange={(event) => setImage(event.target.value)}
+                                                    //value={image}
+                                                    //onChange={(event) => setImage(event.target.value)}
                                             />
                                             </div>
                                     </div>
@@ -776,8 +793,8 @@ const Home = () => {
                         (
                             <>
                                {employees.map((employee, index) => ( 
-                                <div className="EmpBox" key={index}>
-                                    {editingIndex === index ?
+                                <div className="EmpBox" key={employee.employeeId}>
+                                    {editingIndex === employee.employeeId ?
                                     (
                                         <>
                                         <div className="EmpBoxTop">
@@ -833,7 +850,7 @@ const Home = () => {
 
                                 <div style={{display: "flex", flexDirection: "row", marginLeft: "8.5rem", marginBottom: "0.5rem"}}>
                                             <div style={{display: "flex", flexDirection: "row", marginLeft: "3rem"}}>
-                                                <button style={{backgroundColor: "unset", border: "none"}} onClick={() => saveSalariesListInfo(index)}>
+                                                <button style={{backgroundColor: "unset", border: "none"}} onClick={() => saveSalariesListInfo(employee.employeeId)}>
                                                     <svg width="1.1rem" height="1.5rem">
                                                         <image href={save} width="100%" height="100%" />
                                                     </svg>
@@ -897,7 +914,7 @@ const Home = () => {
     
                                     <div style={{display: "flex", flexDirection: "row", marginLeft: "8.5rem", marginBottom: "0.5rem"}}>
                                                 <div style={{display: "flex", flexDirection: "row", marginLeft: "3rem"}}>
-                                                    <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleSalariesEdit(index)}>
+                                                    <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleSalariesEdit(employee.employeeId)}>
                                                         <svg width="1.1rem" height="1.5rem">
                                                             <image href={edit} width="100%" height="100%" />
                                                         </svg>
@@ -965,7 +982,7 @@ const Home = () => {
     
                                     <div style={{display: "flex", flexDirection: "row", marginLeft: "8.5rem", marginBottom: "0.5rem"}}>
                                                 <div style={{display: "flex", flexDirection: "row", marginLeft: "3rem"}}>
-                                                    <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleSalariesEdit(index)}>
+                                                    <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleSalariesEdit(employee.employeeId)}>
                                                         <svg width="1.1rem" height="1.5rem">
                                                             <image href={edit} width="100%" height="100%" />
                                                         </svg>
