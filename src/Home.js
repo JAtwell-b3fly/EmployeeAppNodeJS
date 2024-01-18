@@ -22,6 +22,8 @@ import edit from "./images/edit.png";
 import trash from "./images/trash.png";
 import save from "./images/save.png";
 import cancel from "./images/cancel.png";
+import cv_selected from "./images/cv-selected.png";
+import cv_unselected from "./images/cv-unselected.png";
 
 const Home = () => {
 
@@ -53,6 +55,13 @@ const Home = () => {
 
     //Function to toggle between list edit or display in Employee List
     const [isListEdit, setIsListEdit] = useState(false);
+
+    //Function to toggle between salaries edit or display in Employee Salaries
+    const [isSalariesEdit, setIsSalariesEdit] = useState(false);
+
+    //Function to toggle between curriculum vitae edit or display in Employees Curriculum Vitae
+    const [isCurriculumVitaeEdit, setIsCurriculumVitaeEdit] = useState(false);
+
     const [editingIndex, setEditingIndex] = useState(null);
 
 
@@ -81,6 +90,8 @@ const Home = () => {
             setEditNumber(editNumber === "" ? employeeToEdit?.number : editNumber);
             setEditLocationE(editLocationE === "" ? employeeToEdit?.locationE : editLocationE);
             setEditWorkingStart(editWorkingStart === "" ? employeeToEdit?.workingStarted : editWorkingStart)
+            setEditSalary(employeeToEdit.salary)
+            setEditCV(employeeToEdit.cv)
         } else {
             console.error("Invalid index or employees array is empty");
         }
@@ -91,20 +102,32 @@ const Home = () => {
         setIsListEdit(false);
     }
 
-    //Function to toggle between salaries edit or display in Employee List
-    const [isSalariesEdit, setIsSalariesEdit] = useState(false);
+    const handleSalariesEdit = (employeeId) => {
+        console.log("handleSalaryEdit called with employeeId:", employeeId);
+        console.log("Current employees array: ", employees);
 
-    const handleSalariesEdit = (index) => {
-        if(employees && employees.length > index && employees[index]) {
-            setEditingIndex(index);
+        const employeeToEdit = employees.find(emp => emp.employeeId === employeeId);
+
+        console.log("Found employee:", employeeToEdit);
+
+        console.log('employeeToEdit:', employeeToEdit);
+        console.log('editName:', editName);
+
+        if (employeeToEdit) {
+            setEditingIndex(employeeId);
             setIsSalariesEdit(true);
 
-            setEditName(employees[index].name);
-            setEditImage(employees[index].image);
-            setEditEmployable(employees[index].employable);
-            setEditPosition(employees[index].position);
-            setEditWorkingStart(employees[index].workingStart);
-            setEditSalary(employees[index].salary);
+            
+            setEditName(editName === "" ? employeeToEdit?.name : editName);
+            setEditEmailA(employeeToEdit.emailA);
+            //setEditImage(editImage === "" ? employeeToEdit?.image : editImage);
+            setEditEmployable(editEmployable === "" ? employeeToEdit?.employable : editEmployable);
+            setEditPosition(employeeToEdit.position);
+            setEditNumber(employeeToEdit.number);
+            setEditLocationE(employeeToEdit.locationE);
+            setEditWorkingStart(editWorkingStart === "" ? employeeToEdit?.workingStarted : editWorkingStart)
+            setEditCV(employeeToEdit.cv)
+            setEditSalary(editSalary ? employeeToEdit?.salary : editSalary)
         } else {
             console.error("Invalid index or employees array is empty");
         }
@@ -112,6 +135,41 @@ const Home = () => {
 
     const handleCancelSalariesEdit = () => {
         setIsSalariesEdit(false);
+    }
+
+    const handleCurriculumVitaeEdit = (employeeId) => {
+        console.log("handleSalaryEdit called with employeeId:", employeeId);
+        console.log("Current employees array: ", employees);
+
+        const employeeToEdit = employees.find(emp => emp.employeeId === employeeId);
+
+        console.log("Found employee:", employeeToEdit);
+
+        console.log('employeeToEdit:', employeeToEdit);
+        console.log('editName:', editName);
+
+        if (employeeToEdit) {
+            setEditingIndex(employeeId);
+            setIsCurriculumVitaeEdit(true);
+
+            
+            setEditName(editName === "" ? employeeToEdit?.name : editName);
+            setEditEmailA(employeeToEdit.emailA);
+            //setEditImage(editImage === "" ? employeeToEdit?.image : editImage);
+            setEditEmployable(employeeToEdit.employable);
+            setEditPosition(employeeToEdit.position);
+            setEditNumber(employeeToEdit.number);
+            setEditLocationE(employeeToEdit.locationE);
+            setEditWorkingStart(employeeToEdit.workingStarted)
+            setEditCV(editCV === "" ? employeeToEdit?.cv : editCV)
+            setEditSalary(employeeToEdit.salary)
+        } else {
+            console.error("Invalid index or employees array is empty");
+        }
+    }
+
+    const handleCancelCurriculumVitaeEdit = () => {
+        setIsCurriculumVitaeEdit(false);
     }
 
     //Form State Management
@@ -132,12 +190,11 @@ const Home = () => {
     const [salary, setSalary] = useState(null);
     const [editSalary, setEditSalary] = useState(null);
     const [cv, setCV] = useState(null);
+    const [editCV, setEditCV] = useState(null);
     const [image, setImage] = useState(null);
     const [editImage, setEditImage] = useState(null);
 
     const addNewEmployee = () => {
-
-        //Use the endpoint defined in the backend side to add the new employee
 
         let userData = {
             name: name,
@@ -151,7 +208,6 @@ const Home = () => {
             cv: cv,
             image: image,
         };
-
 
         fetch('http://localhost:8080/addEmployee', {
             method: 'POST',
@@ -175,6 +231,126 @@ const Home = () => {
         });
     }
 
+    const deleteListEmployee = (employeeId) => {
+        fetch(`http://localhost:8080/deleteEmployee/${employeeId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json', 
+            },
+        })
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`HTTP error! Status: ${res.status}`);
+            }
+            return res.json();
+        })
+        .then(result => {
+            console.log("result: ", result);
+            alert("Employee deleted successfully");
+
+            // Fetch the updated list of employees after deletion
+            fetch('http://localhost:8080/getEmployees')
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP error! Status: ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(updatedEmployees => {
+                console.log("Updated employees: ", updatedEmployees);
+                setEmployees(updatedEmployees);
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+        });
+
+        setIsListEdit(false);
+    }
+
+    const deleteCurriculumVitaeEmployee = (employeeId) => {
+        fetch(`http://localhost:8080/deleteEmployee/${employeeId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json', 
+            },
+        })
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`HTTP error! Status: ${res.status}`);
+            }
+            return res.json();
+        })
+        .then(result => {
+            console.log("result: ", result);
+            alert("Employee deleted successfully");
+
+            // Fetch the updated list of employees after deletion
+            fetch('http://localhost:8080/getEmployees')
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP error! Status: ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(updatedEmployees => {
+                console.log("Updated employees: ", updatedEmployees);
+                setEmployees(updatedEmployees);
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+        });
+
+        setIsCurriculumVitaeEdit(false);
+    }
+
+    const deleteSalaryEmployee = (employeeId) => {
+        fetch(`http://localhost:8080/deleteEmployee/${employeeId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json', 
+            },
+        })
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`HTTP error! Status: ${res.status}`);
+            }
+            return res.json();
+        })
+        .then(result => {
+            console.log("result: ", result);
+            alert("Employee deleted successfully");
+
+            // Fetch the updated list of employees after deletion
+            fetch('http://localhost:8080/getEmployees')
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP error! Status: ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(updatedEmployees => {
+                console.log("Updated employees: ", updatedEmployees);
+                setEmployees(updatedEmployees);
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+        });
+
+        setIsListEdit(false);
+    }
+
 
     const handleImageChange = (event) => {
         const file = event.target.files[0];
@@ -185,6 +361,31 @@ const Home = () => {
                 setEditImage(reader.result);
             }
             reader.readAsDataURL(file);
+        }
+    }
+
+    const handleCVChange = (event) => {
+        const file = event.target.files[0];
+
+        if (file) {
+            const fileType = file.type;
+
+            //Check if the selected file is a PDF or a Word Document
+            if (fileType === "application/pdf" || fileType === "application/msword" || fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+                const reader = new FileReader();
+
+                reader.onload = function (event) {
+                    const fileContent = event.target.result;
+
+                    //Update the state with the file content
+                    setEditCV(fileContent);
+                }
+
+                //Read the file as text
+                reader.readAsText(file);
+            } else {
+                alert("Please select a valid PDF or Word Document");
+            }
         }
     }
 
@@ -232,9 +433,13 @@ const Home = () => {
         setIsListEdit(false);
     }
 
-    const saveSalariesListInfo = (index) => {
+    const saveSalariesListInfo = (employeeId) => {
+        console.log("EmployeeId: ", employeeId);
+
         let updatedEmployeeData = {
             name:  editName ? editName : name,
+            emailA: emailA,
+            locationE: locationE,
             workingStarted: editWorkingStart ? editWorkingStart : workingStart,
             position: editPosition ? editPosition : position,
             image: editImage ? editImage : image,
@@ -242,14 +447,15 @@ const Home = () => {
             cv: cv,
             salary: editSalary ? editSalary : salary,
             number: number,
-            location: location,
-            emailA: emailA,
+            employeeId: employeeId,
         }
 
-        fetch(`http://localhost:8080/updateEmployee/${index}`, {
+        console.log("UpdatedEmployeeData: ", updatedEmployeeData);
+
+        fetch(`http://localhost:8080/updateEmployee/${employeeId}`, {
             method: "PUT",
             headers: {
-                "Content-Type": "application.json",
+                "Content-Type": "application/json",
             },
             body: JSON.stringify(updatedEmployeeData),
         })
@@ -262,13 +468,57 @@ const Home = () => {
             .then(result => {
                 console.log("result: ", result);
                 //Optionally, update your state or take any other actions
-                alert("Employee Salary Information Updated");
+                alert("Employee List Information Updated");
             })
             .catch(error => {
                 console.error("Error fetching data: ", error);
             })
 
         setIsSalariesEdit(false);
+    }
+
+    const saveCurriculumVitaeListInfo = (employeeId) => {
+        console.log("EmployeeId: ", employeeId);
+
+        let updatedEmployeeData = {
+            name:  editName ? editName : name,
+            emailA: emailA,
+            locationE: locationE,
+            workingStarted: workingStart,
+            position: position,
+            image: editImage ? editImage : image,
+            employable: employable,
+            cv: editCV ? editCV : cv,
+            salary: salary,
+            number: number,
+            employeeId: employeeId,
+        }
+
+        console.log("UpdatedEmployeeData: ", updatedEmployeeData);
+
+        fetch(`http://localhost:8080/updateEmployee/${employeeId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updatedEmployeeData),
+        })
+            .then(res => {
+                if(!res.ok) {
+                    throw new Error(`HTTP error! Status: ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(result => {
+                console.log("result: ", result);
+                //Optionally, update your state or take any other actions
+                alert("Employee List Information Updated");
+            })
+            .catch(error => {
+                console.error("Error fetching data: ", error);
+            })
+
+        setIsCurriculumVitaeEdit(false);
     }
 
     const cancelClick = () => {
@@ -334,7 +584,17 @@ const Home = () => {
                         </button>
                     </div>
 
-                    <div style={{marginTop: "20rem"}}>
+                    <div className="singleLeftButton">
+                        <button className={dashboardToggle === "CurriculumVitae" ? "dashboardButton" : "dashboardButtonUnselected"} onClick={() => setDashboardToggle("CurriculumVitae")}>
+                            <svg width="1.3rem" height="1.3rem" style={{marginTop: "1rem", justfifyContent: "center", marginRight: "1rem", marginLeft: "1rem", backgroundColor: "rgb(236, 243, 250)", borderRadius: "1rem", padding: "0.2rem"}} >
+                                <image href={dashboardToggle === "CurriculumVitae" ? cv_selected : cv_unselected} width="100%" height="100%" />
+                            </svg>
+
+                            <p style={{marginRight: "1rem", color: dashboardToggle === "CurriculumVitae" ? "rgb(0, 169, 255)" : "rgb(236, 243, 250)", fontWeight: "bold", fontSize: "105%", justifyContent: "center"}}>Employees Curriculum Vitae</p>
+                        </button>
+                    </div>
+
+                    <div style={{marginTop: "15rem"}}>
                         <hr style={{backgroundColor: "rgb(236, 243, 250)", height: "0.1rem", width: "80%"}} />
 
                         <p style={{textAlign: "center", color: "rgb(236, 243, 250)", fontWeight: "bold"}}>Need Help?</p>
@@ -519,9 +779,11 @@ const Home = () => {
                                                     </svg>
                                                 </button>
     
-                                                <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
-                                                    <image href={trash} width="100%" height="100%" />
-                                                </svg>
+                                                <button style={{border: "none", backgroundColor: "unset"}} onClick = {() => deleteListEmployee(employee.employeeId)}>
+                                                    <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
+                                                        <image href={trash} width="100%" height="100%" />
+                                                    </svg>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -600,9 +862,11 @@ const Home = () => {
                                                     </svg>
                                                 </button>
     
-                                                <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
-                                                    <image href={trash} width="100%" height="100%" />
-                                                </svg>
+                                                <button style={{border: "none", backgroundColor: "unset"}} onClick = {() => deleteListEmployee(employee.employeeId)}>
+                                                    <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
+                                                        <image href={trash} width="100%" height="100%" />
+                                                    </svg>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -821,7 +1085,7 @@ const Home = () => {
                                         <svg width="1.8rem" height="1.8rem" style={{marginTop: "0.95rem", marginRight: "0.5rem"}}>
                                             <image href={salaries_unselected} width="100%" height="100%" />
                                         </svg>
-                                        <input placeholder={employee.salary} value={editSalary} onChange={(event) => setEditSalary(event.target.value)} style={{ fontSize: "100%", fontWeight: "bold", position: "relative", border: "none", width: "100%", marginLeft: "0.3rem", paddingTop: "0.5rem", height: "60%", marginTop: "0.3rem", textAlign: "left"}} />
+                                        <input placeholder={"R" + employee.salary} value={editSalary} onChange={(event) => setEditSalary(event.target.value)} style={{ fontSize: "100%", fontWeight: "bold", position: "relative", border: "none", width: "100%", marginLeft: "0.3rem", paddingTop: "0.5rem", height: "60%", marginTop: "0.3rem", textAlign: "left"}} />
                             </div>
 
                             <div style={{display: "flex", flexDirection: "row", marginTop: "0.01rem", marginLeft: "0.5rem"}}>
@@ -920,9 +1184,11 @@ const Home = () => {
                                                         </svg>
                                                     </button>
     
-                                                    <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
-                                                        <image href={trash} width="100%" height="100%" />
-                                                    </svg>
+                                                    <button style={{border: "none", backgroundColor: "unset"}} onClick = {() => deleteSalaryEmployee(employee.employeeId)}>
+                                                        <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
+                                                            <image href={trash} width="100%" height="100%" />
+                                                        </svg>
+                                                    </button>
                                                 </div>
                                     </div>
                                         </>
@@ -935,7 +1201,7 @@ const Home = () => {
                         (
                             <>
                             {employees.map((employee, index) => (
-                                <div className="EmpBox" key={index}>
+                                <div className="EmpBox" key={employee.employeeId}>
                                 <div className="EmpBoxTop">
                                     <div style={{position: "relative", marginLeft: "6rem", marginTop: "1rem", display: "flex", flexDirection: "row"}}>
                                         <svg width="3.5rem" height="3.5rem" style={{borderRadius: "100%", border: "solid", borderColor: "white", borderWidth: 5}}>
@@ -988,9 +1254,195 @@ const Home = () => {
                                                         </svg>
                                                     </button>
     
-                                                    <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
-                                                        <image href={trash} width="100%" height="100%" />
+                                                    <button style={{border: "none", backgroundColor: "unset"}} onClick = {() => deleteSalaryEmployee(employee.employeeId)}>
+                                                        <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
+                                                            <image href={trash} width="100%" height="100%" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                    </div>
+                            </div>
+                            ))}
+                            </>
+                        )}
+                    </div>
+                    </>
+                )}
+
+
+                {dashboardToggle === "CurriculumVitae" && (
+                        <>
+                    <div style={{marginTop: "2rem"}}>
+                        <input placeholder="Search..." 
+                                style={{borderRadius: "1rem", padding: "0.6rem", width: "35rem", border: "none", backgroundColor: "rgb(137, 207, 243, 0.3)", textAlign: "left"}}
+                                onChange={(event) => setSearchTerm(event.target.value)}
+                                value={searchTerm}
+                        />
+                    </div>
+
+                    <hr style={{backgroundColor: "rgb(236, 243, 250)", height: "0.01rem", width: "100%"}} />
+
+                    <div style={{width: "100%", display: "flex", flexDirection: "row", backgroundColor: "rgb(137, 207, 243, 0.3)", padding: "0.1rem"}}>
+                            <svg width="1.2rem" height="1.2rem" style={{marginTop: "1rem", marginLeft: "1rem"}}>
+                                <image href={user} width="100%" height="100%" />
+                            </svg>
+
+                        <p style={{textAlign: "left", marginLeft: "0.5rem"}}>{totalEmployees()} Employees</p>
+                    </div>
+
+                    <div className="List">
+                        {isCurriculumVitaeEdit ? 
+                        (
+                            <>
+                               {employees.map((employee, index) => ( 
+                                <div className="EmpBox" key={employee.employeeId}>
+                                    {editingIndex === employee.employeeId ?
+                                    (
+                                        <>
+                                        <div className="EmpBoxTop">
+                                <div style={{position: "relative", marginLeft: "6rem", marginTop: "1rem", display: "flex", flexDirection: "row"}}>
+                                    <label htmlFor="imageInput">
+                                        <svg width="3.5rem" height="3.5rem" style={{borderRadius: "100%", border: "solid", borderColor: "white", borderWidth: 5}}>
+                                            <image href={user5} width="100%" height="100%" />
+                                        </svg>
+                                    </label>
+
+                                    <input type="file" accept="image/*" style={{display: "none"}} /*onChange={handleImageChange}*/ id="imageInput" />
+
+                                </div>
+
+                                <input placeholder={employee.name} value={editName} onChange={(event) => setEditName(event.target.value)} style={{fontWeight: "bolder", textAlign: "center", color: "black", position: "relative", marginTop: "-0.1rem", fontSize: "80%", border: "none", width: "98%"}} />
+                                
+                            </div>
+
+                            <div style={{display: "flex", flexDirection: "row", marginTop: "2rem", marginLeft: "0.1rem"}}>
+    
+                                <div style={{marginLeft: "1rem", textAlign: "left", marginRight: "1rem", width: "100%"}}>
+                                    <label style={{fontSize: "80%"}}>
+                                        Select Curriculum Vitae
+                                        <input id="cvInput" type="file" accept=".pdf, .docx" onChange={handleCVChange} />
+                                    </label>
+
+                                    {editCV && (
+                                        <div style={{ border: '1px solid #ccc', padding: '10px', marginTop: '10px' }}>
+                                        <h3>Preview:</h3>
+                                        <pre>{editCV}</pre>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                                <div style={{display: "flex", flexDirection: "row", marginLeft: "8.5rem", marginBottom: "0.5rem"}}>
+                                            <div style={{display: "flex", flexDirection: "row", marginLeft: "3rem"}}>
+                                                <button style={{backgroundColor: "unset", border: "none"}} onClick={() => saveCurriculumVitaeListInfo(employee.employeeId)}>
+                                                    <svg width="1.1rem" height="1.5rem">
+                                                        <image href={save} width="100%" height="100%" />
                                                     </svg>
+                                                </button>
+
+                                                <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleCancelCurriculumVitaeEdit()}>
+                                                    <svg width="1.5rem" height="1.5rem" style={{marginLeft: "0.1rem"}}>
+                                                        <image href={cancel} width="100%" height="100%" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                </div>
+                                        </>
+                                    )
+                                    :
+                                    (
+                                        <>
+                                        <div className="EmpBoxTop">
+                                    <div style={{position: "relative", marginLeft: "6rem", marginTop: "1rem", display: "flex", flexDirection: "row"}}>
+                                        <svg width="3.5rem" height="3.5rem" style={{borderRadius: "100%", border: "solid", borderColor: "white", borderWidth: 5}}>
+                                            <image href={user2} width="100%" height="100%" />
+                                        </svg>
+    
+                                        <p style={{color: "Green", marginTop: "2rem", marginLeft: "-3.5rem", fontWeight: "bold"}}>- {employee.employable} -</p>
+                                    </div>
+    
+                                    <p style={{fontWeight: "bolder", textAlign: "center", color: "black", position: "relative", marginTop: "-0.1rem", fontSize: "80%"}}>{employee.name}</p>
+                                </div>
+    
+                                <div style={{display: "flex", flexDirection: "row", marginTop: "2rem", marginLeft: "0.5rem", marginBottom: "0.1rem"}}>
+    
+                                    <div style={{marginLeft: "4rem", textAlign: "left", marginRight: "1rem", width: "100%"}}>
+                                        <label>
+                                            Curriculum Vitae
+                                        </label>
+
+                                        <div style={{ width: '3rem', height: '3rem', border: '1px solid #ccc', padding: '10px', marginLeft: "1rem", marginTop: "0.2rem" }}>
+                                        {editCV && <pre>{editCV}</pre>}
+                                        </div>
+                                    </div>
+                                </div>
+    
+                                    <div style={{display: "flex", flexDirection: "row", marginLeft: "8.5rem", marginBottom: "0.5rem"}}>
+                                                <div style={{display: "flex", flexDirection: "row", marginLeft: "3rem"}}>
+                                                    <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleCurriculumVitaeEdit(employee.employeeId)}>
+                                                        <svg width="1.1rem" height="1.5rem">
+                                                            <image href={edit} width="100%" height="100%" />
+                                                        </svg>
+                                                    </button>
+    
+                                                    <button style={{border: "none", backgroundColor: "unset"}} onClick = {() => deleteCurriculumVitaeEmployee(employee.employeeId)}>
+                                                        <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
+                                                            <image href={trash} width="100%" height="100%" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                    </div>
+                                        </>
+                                    )
+                                    }
+                        </div>
+                               ))}
+                            </>
+                        ):
+                        (
+                            <>
+                            {employees.map((employee, index) => (
+                                <div className="EmpBox" key={employee.employeeId}>
+                                <div className="EmpBoxTop">
+                                    <div style={{position: "relative", marginLeft: "6rem", marginTop: "1rem", display: "flex", flexDirection: "row"}}>
+                                        <svg width="3.5rem" height="3.5rem" style={{borderRadius: "100%", border: "solid", borderColor: "white", borderWidth: 5}}>
+                                            <image href={user2} width="100%" height="100%" />
+                                        </svg>
+    
+                                        <p style={{color: "Green", marginTop: "2rem", marginLeft: "-3.5rem", fontWeight: "bold"}}>- {employee.employable} -</p>
+                                    </div>
+    
+                                    <p style={{fontWeight: "bolder", textAlign: "center", color: "black", position: "relative", marginTop: "-0.1rem", fontSize: "80%"}}>{employee.name}</p>
+                                </div>
+    
+                                
+    
+                                <div style={{display: "flex", flexDirection: "row", marginTop: "2rem", marginLeft: "0.5rem", marginBottom: "0.1rem"}}>
+    
+                                    <div style={{marginLeft: "4rem", textAlign: "left", marginRight: "1rem", width: "100%"}}>
+                                        <label>
+                                            Curriculum Vitae
+                                        </label>
+
+                                        <div style={{ width: '3rem', height: '3rem', border: '1px solid #ccc', padding: '10px', marginLeft: "1rem", marginTop: "0.2rem" }}>
+                                        {cv && <pre>{cv}</pre>}
+                                        </div>
+                                    </div>
+                                </div>
+    
+                                    <div style={{display: "flex", flexDirection: "row", marginLeft: "8rem", marginBottom: "0.5rem"}}>
+                                                <div style={{display: "flex", flexDirection: "row", marginLeft: "3rem"}}>
+                                                    <button style={{border: "none", backgroundColor: "unset"}} onClick={() => handleCurriculumVitaeEdit(employee.employeeId)}>
+                                                        <svg width="1.1rem" height="1.5rem">
+                                                            <image href={edit} width="100%" height="100%" />
+                                                        </svg>
+                                                    </button>
+    
+                                                    <button style={{border: "none", backgroundColor: "unset"}} onClick = {() => deleteCurriculumVitaeEmployee(employee.employeeId)}>
+                                                        <svg width="1.5rem" height="1.5rem" style={{marginLeft: "1rem"}}>
+                                                            <image href={trash} width="100%" height="100%" />
+                                                        </svg>
+                                                    </button>
                                                 </div>
                                     </div>
                             </div>
